@@ -1,9 +1,3 @@
-#!/usr/bin/env python
-# coding: utf-8
-
-# In[1]:
-
-
 import pandas as pd
 import torch
 import torchvision
@@ -20,22 +14,10 @@ from torch.utils.data import Dataset, DataLoader
 from numpy import asarray
 from torch.backends import cuda
 
-
-# In[2]:
-
-
 ds = pd.read_csv("data/train.csv")
 test_ds = pd.read_csv("data/test.csv")
 
-
-# In[3]:
-
-
 img_dir="Downloads/train/"
-
-
-# In[5]:
-
 
 class ImageDataset(Dataset):
     def __init__(self, dataframe, img_dir, transform = None):
@@ -54,16 +36,8 @@ class ImageDataset(Dataset):
             img = self.transform(img)
         return [img, label]
 
-
-# In[6]:
-
-
 train_ds = ds.iloc[:15000,:]
 val_ds = ds.iloc[15000:,:]
-
-
-# In[7]:
-
 
 transform_img = transforms.Compose([
         transforms.ToPILImage(),
@@ -71,28 +45,12 @@ transform_img = transforms.Compose([
         transforms.ToTensor()
     ])
 
-
-# In[8]:
-
-
 train_dataset = ImageDataset(train_ds, img_dir, transform_img)
 val_dataset = ImageDataset(val_ds, img_dir, transform_img)
 
-
-# In[10]:
-
-
 train_loader = DataLoader(train_dataset, 16, shuffle = True) 
 
-
-# In[11]:
-
-
 val_loader =  DataLoader(val_dataset, 16) 
-
-
-# In[14]:
-
 
 def get_default_device():
     if torch.cuda.is_available():
@@ -119,16 +77,8 @@ class DeviceDataLoader():
     def __len__(self):
         return len(self.dl)
 
-
-# In[15]:
-
-
 train_loader = DeviceDataLoader(train_loader, device)
 val_loader = DeviceDataLoader(val_loader, device)
-
-
-# In[16]:
-
 
 class SceneClassificationModel(nn.Module):
     def __init__(self):
@@ -157,10 +107,6 @@ class SceneClassificationModel(nn.Module):
     def forward(self, xb):
         return self.network(xb)
 
-
-# In[17]:
-
-
 def accuracy(model, val_loader):
     acc = 0
     count = 0
@@ -171,10 +117,6 @@ def accuracy(model, val_loader):
         acc += torch.sum(pred == labels).item()
         count += len(images)
     return acc / count
-
-
-# In[18]:
-
 
 def train(epoch, lr, model, train_loader, val_loader, opt_func=torch.optim.SGD):
     optimizer = opt_func(model.parameters(), lr)
@@ -193,27 +135,11 @@ def train(epoch, lr, model, train_loader, val_loader, opt_func=torch.optim.SGD):
         epoch_accuracy = accuracy(model ,val_loader)
         print("Epoch [{}], val_loss: {:.4f}, val_acc: {:.4f}".format(epoch, epoch_loss, epoch_accuracy))
 
-
-# In[19]:
-
-
 model = to_device(SceneClassificationModel(), device)
-
-
-# In[20]:
-
 
 train(5, 0.0001, model, train_loader, val_loader, torch.optim.Adam)
 
-
-# In[21]:
-
-
 train(2, 0.00005, model, train_loader, val_loader, torch.optim.Adam)
-
-
-# In[22]:
-
 
 def show_image_and_prediction(idx ,img_dir, test_ds):
     labels = {0: "Buildings", 1: "Forests", 2: "Mountains", 3: "Glacier", 4: "Sea", 5: "Street"}
@@ -223,10 +149,6 @@ def show_image_and_prediction(idx ,img_dir, test_ds):
     _, pred = out.max(1)
     print("Label: {}".format(labels[pred.item()]))
     plt.imshow(img.permute(1,2,0))
-
-
-# In[43]:
-
 
 show_image_and_prediction(3110, img_dir, test_ds)
 
